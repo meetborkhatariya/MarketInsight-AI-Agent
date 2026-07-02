@@ -1,148 +1,231 @@
-# MarketInsight AI
+# 📊 MarketInsight AI
 
-Agentic AI-powered market research automation using LangGraph.
+> **AI-Powered Agentic Market Research & Business Intelligence
+> Platform**
 
-## Overview
+![Python](https://img.shields.io/badge/Python-3.11-blue)
+![LangGraph](https://img.shields.io/badge/LangGraph-Agentic%20Workflow-green)
+![LangChain](https://img.shields.io/badge/LangChain-Framework-success)
+![FastAPI](https://img.shields.io/badge/FastAPI-Backend-009688)
+![Streamlit](https://img.shields.io/badge/Streamlit-Frontend-FF4B4B)
+![Groq](https://img.shields.io/badge/Groq-LLM-orange)
+![License](https://img.shields.io/badge/License-MIT-yellow)
 
-MarketInsight AI is a production-grade multi-agent system that performs end-to-end market research. Given a natural language query, it searches the web, analyzes data, extracts insights, generates strategic recommendations, and produces a professional PDF report — all orchestrated through a LangGraph state machine.
+## 🚀 Overview
 
-## Architecture
+MarketInsight AI is an **Agentic AI application** that automates
+end-to-end market research using **LangGraph**, **LangChain**, **Groq
+LLM**, and **Tavily Search**.
 
+Instead of relying on a single LLM call, the application executes a
+stateful workflow that: - Understands the user's query - Searches
+real-time market data - Analyzes trends - Extracts strategic insights -
+Generates business recommendations - Produces a professional report -
+Supports human-in-the-loop feedback refinement
+
+------------------------------------------------------------------------
+
+## ✨ Features
+
+-   Multi-step Agentic AI workflow
+-   Real-time web search with Tavily
+-   Market trend analysis using Groq LLM
+-   SWOT & strategic insights
+-   Business recommendations
+-   Markdown & PDF report generation
+-   Feedback-driven report improvement
+-   FastAPI REST API
+-   Streamlit UI
+-   Modular architecture
+
+------------------------------------------------------------------------
+
+## 🏗️ LangGraph Workflow
+
+``` text
+START
+  │
+  ▼
+Understand Query
+  │
+  ▼
+Search Market Data
+  │
+  ▼
+Analyze Market
+  │
+  ▼
+Extract Insights
+  │
+  ▼
+Generate Recommendations
+  │
+  ▼
+Create Report
+  │
+  ▼
+Collect Feedback
+  │
+  ▼
+Improve Report
+  │
+  ▼
+END
 ```
-User Query
-    │
-    ▼
-┌─────────────────┐
-│ understand_query│  Refines and structures the raw query
-└────────┬────────┘
-         ▼
-┌─────────────────┐
-│search_market_data│ Searches Tavily for relevant market data
-└────────┬────────┘
-         ▼
-┌─────────────────┐
-│ analyze_market   │  Analyzes collected data using Groq LLM
-└────────┬────────┘
-         ▼
-┌─────────────────┐
-│ extract_insights │  Extracts key insights and patterns
-└────────┬────────┘
-         ▼
-┌──────────────────────┐
-│generate_recommendations│ Generates actionable recommendations
-└──────────┬───────────┘
-           ▼
-┌─────────────────┐
-│ create_report    │  Assembles and exports a PDF report
-└────────┬────────┘
-         ▼
-┌─────────────────┐
-│ collect_feedback │  Collects feedback for improvement
-└────────┬────────┘
-         ▼
-   ┌─────────┐
-   │ improve  │◄── feedback loop (max 3 iterations)
-   │ _report  │
-   └────┬────┘
-        ▼
-      END
-```
 
-### Tech Stack
+------------------------------------------------------------------------
 
-| Component       | Technology    |
-|-----------------|---------------|
-| Orchestration   | LangGraph     |
-| LLM             | Groq API      |
-| Web Search      | Tavily API    |
-| API Layer       | FastAPI       |
-| Frontend        | Streamlit     |
-| PDF Generation  | FPDF2         |
-| Configuration   | Pydantic      |
+## 🧠 Workflow Nodes
 
-## Project Structure
+  Node                       Responsibility
+  -------------------------- -----------------------------------------------
+  Understand Query           Extracts industry, country, goal and keywords
+  Search Market Data         Retrieves live information using Tavily
+  Analyze Market             Synthesizes trends and opportunities
+  Extract Insights           Produces SWOT and executive insights
+  Generate Recommendations   Creates business strategies
+  Create Report              Builds Markdown/PDF report
+  Collect Feedback           Captures user feedback
+  Improve Report             Updates only requested sections
 
-```
+------------------------------------------------------------------------
+
+## 🛠️ Tech Stack
+
+  Component         Technology
+  ----------------- -------------
+  Agent Framework   LangGraph
+  LLM Framework     LangChain
+  LLM               Groq
+  Search            Tavily API
+  Backend           FastAPI
+  Frontend          Streamlit
+  PDF               FPDF2
+  Validation        Pydantic
+  Language          Python 3.11
+
+------------------------------------------------------------------------
+
+## 📂 Project Structure
+
+``` text
 marketinsight-ai/
-├── app.py                  # FastAPI entry point
-├── streamlit_app.py        # Streamlit UI
-├── graph.py                # LangGraph workflow
-├── state.py                # Graph state schema
-├── config.py               # API keys & settings
-├── nodes/                  # LangGraph node functions
-│   ├── understand_query.py
-│   ├── search_market_data.py
-│   ├── analyze_market.py
-│   ├── extract_insights.py
-│   ├── generate_recommendations.py
-│   ├── create_report.py
-│   ├── collect_feedback.py
-│   └── improve_report.py
-├── tools/                  # Tool wrappers
-│   ├── groq_llm.py
-│   ├── tavily_search.py
-│   └── pdf_generator.py
-├── prompts/                # LLM prompt templates
-│   ├── analysis_prompt.py
-│   ├── recommendation_prompt.py
-│   └── report_prompt.py
-├── reports/                # Generated PDF output
-├── tests/                  # Test suite
+├── app.py
+├── streamlit_app.py
+├── graph.py
+├── state.py
+├── config.py
+├── nodes/
+├── tools/
+├── reports/
+├── tests/
 ├── .env.example
 ├── requirements.txt
 └── README.md
 ```
 
-## Installation
+------------------------------------------------------------------------
 
-### Prerequisites
+## ⚙️ Installation
 
-- Python 3.11+
-- Groq API key
-- Tavily API key
+``` bash
+git clone https://github.com/meetborkhatariya/MarketInsight-AI-Agent.git
+cd MarketInsight-AI-Agent
 
-### Setup
+python -m venv venv
 
-```bash
-# Clone the repository
-git clone <repo-url>
-cd marketinsight-ai
+# Windows
+venv\Scripts\activate
 
-# Create virtual environment
-python -m venv .venv
-source .venv/bin/activate  # Windows: .venv\Scripts\activate
-
-# Install dependencies
 pip install -r requirements.txt
-
-# Configure environment
-cp .env.example .env
-# Edit .env with your API keys
 ```
 
-## Usage
+Create a `.env` file:
 
-### FastAPI Server
-
-```bash
-python app.py
-# Server runs at http://localhost:8000
-# Health check: http://localhost:8000/health
+``` env
+GROQ_API_KEY=your_groq_api_key
+TAVILY_API_KEY=your_tavily_api_key
 ```
 
-### Streamlit UI
+Run the backend:
 
-```bash
+``` bash
+python -m uvicorn app:app --reload
+```
+
+Run the frontend:
+
+``` bash
 streamlit run streamlit_app.py
-# UI opens at http://localhost:8501
 ```
 
-## Running Tests
+------------------------------------------------------------------------
 
-```bash
-pytest tests/
+## 📋 Example Query
+
+``` text
+Analyze the Indian Electric Vehicle market for investment opportunities.
 ```
 
-## License
+------------------------------------------------------------------------
 
-MIT
+## 📄 Sample Report
+
+The generated report includes:
+
+-   Executive Summary
+-   Market Overview
+-   Market Analysis
+-   SWOT Analysis
+-   Opportunities
+-   Risks
+-   Business Recommendations
+-   References
+
+------------------------------------------------------------------------
+
+## 📸 Screenshots
+
+Add screenshots after uploading them:
+
+``` text
+screenshots/
+├── home.png
+├── report.png
+├── api_docs.png
+```
+
+------------------------------------------------------------------------
+
+## 🌐 API Endpoints
+
+  Method   Endpoint           Description
+  -------- ------------------ ---------------------------------
+  GET      /health            Service health
+  POST     /generate-report   Generate market research report
+
+------------------------------------------------------------------------
+
+## 🔮 Future Improvements
+
+-   Authentication
+-   Report history
+-   Interactive charts
+-   Multi-agent collaboration
+-   Cloud deployment
+-   Database integration
+
+------------------------------------------------------------------------
+
+## 👨‍💻 Author
+
+**Meet Borkhatariya**
+
+-   GitHub: https://github.com/meetborkhatariya
+-   LinkedIn: https://www.linkedin.com/in/meetborkhatariya/
+
+------------------------------------------------------------------------
+
+## 📜 License
+
+This project is licensed under the MIT License.
