@@ -8,8 +8,10 @@ from a ``.env`` file at the project root.
 from __future__ import annotations
 
 import logging
+import os
 from pathlib import Path
 
+from dotenv import load_dotenv
 from pydantic import SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -26,6 +28,11 @@ VALID_SEARCH_DEPTHS = {"basic", "advanced"}
 
 REPO_ROOT = Path(__file__).resolve().parent
 """Absolute path to the project root directory."""
+
+
+# Load the project .env early so imported settings see the checked-in values
+# even when the shell has stale overrides from a previous run.
+load_dotenv(REPO_ROOT / ".env", override=True)
 
 
 # ────────────────────────────────────────────────────────────────
@@ -147,11 +154,16 @@ class Settings(BaseSettings):
         return Path(self.report_output_dir)
 
 
+def get_settings() -> Settings:
+    """Load a fresh settings snapshot from the environment and .env file."""
+    return Settings()
+
+
 # ────────────────────────────────────────────────────────────────
 # Singleton
 # ────────────────────────────────────────────────────────────────
 
-settings = Settings()
+settings = get_settings()
 """Application-wide singleton settings object.
 
 Usage::

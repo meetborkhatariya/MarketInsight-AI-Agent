@@ -13,12 +13,13 @@ from typing import Optional
 
 from langchain_groq import ChatGroq
 
-from config import settings
+from config import get_settings
 
 logger = logging.getLogger(__name__)
 
 # Module-level cache for the singleton instance.
 _llm_instance: Optional[ChatGroq] = None
+_llm_cache_key: tuple[str, str, float] | None = None
 
 
 def get_llm(
@@ -52,13 +53,15 @@ def get_llm(
         If initialisation fails (e.g., invalid API key or network
         unreachable).
     """
-    global _llm_instance
+    global _llm_instance, _llm_cache_key
 
-    if _llm_instance is not None:
+    current_settings = get_settings()
+    resolved_model = model or current_settings.groq_model
+    api_key = current_settings.groq_api_key.get_secret_value()
+    cache_key = (resolved_model, api_key, temperature)
+
+    if _llm_instance is not None and _llm_cache_key == cache_key:
         return _llm_instance
-
-    resolved_model = model or settings.groq_model
-    api_key = settings.groq_api_key.get_secret_value()
 
     logger.info(
         "Initialising ChatGroq: model=%s, temperature=%s",
@@ -72,6 +75,7 @@ def get_llm(
             temperature=temperature,
             api_key=api_key,
         )
+        _llm_cache_key = cache_key
     except Exception as exc:
         logger.exception("Failed to initialise ChatGroq")
         raise RuntimeError(

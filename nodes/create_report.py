@@ -6,12 +6,15 @@ professional Markdown report.
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Any
+from zoneinfo import ZoneInfo
 
 from state import MarketState
 
 logger = logging.getLogger(__name__)
+
+IST = ZoneInfo("Asia/Kolkata")
 
 
 def create_report(state: MarketState) -> dict[str, Any]:
@@ -44,7 +47,7 @@ def create_report(state: MarketState) -> dict[str, Any]:
 
     industry: str = (parsed.get("industry") or "").strip() or "N/A"
     country: str = (parsed.get("country") or "").strip() or "Global"
-    timestamp: str = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    timestamp: str = datetime.now(IST).strftime("%Y-%m-%d %H:%M IST")
 
     logger.info("Assembling report: industry='%s', country='%s'", industry, country)
 

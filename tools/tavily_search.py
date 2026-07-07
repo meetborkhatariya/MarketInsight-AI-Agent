@@ -11,38 +11,28 @@ import logging
 from typing import Any, Optional
 
 from tavily import TavilyClient
-from config import settings
+from config import get_settings
 
 logger = logging.getLogger(__name__)
 
 # Module-level cache for the singleton search tool.
 _search_tool: Optional[TavilyClient] = None
+_search_api_key: Optional[str] = None
 # Fields extracted from each search result.
 _KEEP_KEYS = frozenset({"title", "url", "content", "score"})
 
 def _get_search_tool() -> TavilyClient:
-    global _search_tool
+    global _search_tool, _search_api_key
 
-    if _search_tool is None:
+    current_settings = get_settings()
+    api_key = current_settings.tavily_api_key.get_secret_value()
+
+    if _search_tool is None or _search_api_key != api_key:
         _search_tool = TavilyClient(
-            api_key=settings.tavily_api_key.get_secret_value()
+            api_key=api_key
         )
+        _search_api_key = api_key
 
-    return _search_tool
-
-    logger.info(
-        "Initialising TavilySearch: max_results=%s, depth=%s",
-        settings.tavily_max_results,
-        settings.tavily_search_depth,
-    )
-
-    _search_tool = TavilySearch(
-        api_key=api_key,
-        max_results=settings.tavily_max_results,
-        search_depth=settings.tavily_search_depth,
-    )
-
-    logger.debug("TavilySearch instance created successfully")
     return _search_tool
 
 
@@ -70,14 +60,15 @@ def search_market_data(query: str) -> list[dict[str, Any]]:
     RuntimeError
         If the Tavily API call fails after retries or times out.
     """
+    current_settings = get_settings()
     tool = _get_search_tool()
     logger.info("Searching Tavily: query='%s'", query)
 
     try:
         raw: dict[str, Any] = tool.search(
         query=query,
-        search_depth=settings.tavily_search_depth,  # type: ignore[arg-type]
-        max_results=settings.tavily_max_results,
+        search_depth=current_settings.tavily_search_depth,  # type: ignore[arg-type]
+        max_results=current_settings.tavily_max_results,
         )
     except Exception as exc:
         logger.exception("Tavily search failed for query='%s'", query)

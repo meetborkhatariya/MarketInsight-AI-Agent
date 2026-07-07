@@ -9,13 +9,17 @@ from __future__ import annotations
 
 import logging
 import re
-from datetime import datetime, timezone
+import unicodedata
+from datetime import datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 
 from fpdf import FPDF
 
 logger = logging.getLogger(__name__)
+
+IST = ZoneInfo("Asia/Kolkata")
 
 # ── Markdown regex patterns ──────────────────────────────────────
 _HEADING_RE = re.compile(r"^(#{1,3})\s+(.+)$")
@@ -33,6 +37,18 @@ _H1_SIZE = 18
 _H2_SIZE = 14
 _H3_SIZE = 12
 _LEADING = 5
+
+_UNICODE_REPLACEMENTS = {
+    "\u2013": "-",  # en dash
+    "\u2014": "-",  # em dash
+    "\u2212": "-",  # minus sign
+    "\u2026": "...",  # ellipsis
+    "\u2018": "'",
+    "\u2019": "'",
+    "\u201c": '"',
+    "\u201d": '"',
+    "\u00a0": " ",
+}
 
 
 class _NumberedPDF(FPDF):
@@ -126,23 +142,23 @@ def _extract_metadata(
     """Extract title, subtitle, and generated date from the Markdown."""
     title = "Market Research Report"
     subtitle_parts: list[str] = []
-    generated_date = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    generated_date = datetime.now(IST).strftime("%Y-%m-%d %H:%M IST")
 
     for line in lines:
         stripped = line.strip()
 
         m = _TITLE_LINE_RE.match(stripped)
         if m:
-            title = m.group(1).strip()
+            title = _ascii_safe(m.group(1).strip())
             continue
 
         if stripped.startswith("**Industry:**") or stripped.startswith("**Country"):
-            subtitle_parts.append(stripped)
+            subtitle_parts.append(_ascii_safe(stripped))
             continue
 
         m = _DATE_RE.search(stripped)
         if m:
-            generated_date = m.group(1).strip()
+            generated_date = _ascii_safe(m.group(1).strip())
 
     subtitle = " | ".join(subtitle_parts)
     return title, subtitle, generated_date
@@ -159,20 +175,20 @@ def _add_title_page(
 
     pdf.ln(60)
     pdf.set_font("Helvetica", "B", _TITLE_SIZE)
-    pdf.multi_cell(0, 12, title, align="C")
+    pdf.multi_cell(0, 12, _ascii_safe(title), align="C")
     pdf.ln(8)
 
     if subtitle:
         pdf.set_font("Helvetica", "", _BODY_SIZE)
-        pdf.multi_cell(0, 8, subtitle, align="C")
+        pdf.multi_cell(0, 8, _ascii_safe(subtitle), align="C")
         pdf.ln(16)
 
     pdf.set_font("Helvetica", "", _BODY_SIZE)
-    pdf.cell(0, 10, f"Generated: {generated_date}", align="C")
+    pdf.cell(0, 10, _ascii_safe(f"Generated: {generated_date}"), align="C")
     pdf.ln(20)
 
     pdf.set_font("Helvetica", "", 10)
-    pdf.cell(0, 10, "MarketInsight AI - Automated Market Research", align="C")
+    pdf.cell(0, 10, _ascii_safe("MarketInsight AI - Automated Market Research"), align="C")
 
 
 def _cw(pdf: _NumberedPDF) -> float:
@@ -203,13 +219,13 @@ def _render_body(lines: list[str], pdf: _NumberedPDF) -> None:
         if heading:
             heading_count += 1
             level = len(heading.group(1))
-            text = _strip_inline(heading.group(2))
+            text = _ascii_safe(_strip_inline(heading.group(2)))
             _render_heading(pdf, text, level)
             continue
 
         bullet = _BULLET_RE.match(stripped)
         if bullet:
-            text = _strip_inline(bullet.group(1))
+            text = _ascii_safe(_strip_inline(bullet.group(1)))
             if not text:
                 continue
             pdf.set_font("Helvetica", "", _BODY_SIZE)
@@ -218,7 +234,7 @@ def _render_body(lines: list[str], pdf: _NumberedPDF) -> None:
             continue
 
         # Regular paragraph.
-        text = _strip_inline(stripped)
+        text = _ascii_safe(_strip_inline(stripped))
         if not text:
             continue
         pdf.set_font("Helvetica", "", _BODY_SIZE)
@@ -235,7 +251,7 @@ def _render_heading(pdf: _NumberedPDF, text: str, level: int) -> None:
     pdf.ln(4)
     pdf.set_font("Helvetica", "B", size)
     pdf.set_x(pdf.l_margin)
-    pdf.multi_cell(_cw(pdf), size * 0.6, text)
+    pdf.multi_cell(_cw(pdf), size * 0.6, _ascii_safe(text))
     pdf.ln(2)
 
 
@@ -243,3 +259,15 @@ def _strip_inline(text: str) -> str:
     """Remove inline Markdown formatting (bold, italic)."""
     text = _BOLD_RE.sub(r"\1", text)
     return text.strip()
+
+
+def _ascii_safe(text: str) -> str:
+    """Convert text to plain ASCII that the default FPDF fonts can render."""
+    if not text:
+        return ""
+
+    for source, replacement in _UNICODE_REPLACEMENTS.items():
+        text = text.replace(source, replacement)
+
+    normalized = unicodedata.normalize("NFKD", text)
+    return normalized.encode("ascii", "ignore").decode("ascii")

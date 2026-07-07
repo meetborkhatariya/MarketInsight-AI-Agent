@@ -16,9 +16,10 @@ from state import MarketState
 
 logger = logging.getLogger(__name__)
 
-# Maximum characters of search-result content to include in the LLM
-# context (approximate guard — not a hard token limit).
-_MAX_CONTEXT_CHARS = 80_000
+# Keep the analysis prompt comfortably under the Groq TPM limit.
+_MAX_SOURCES = 8
+_MAX_CHARS_PER_SOURCE = 1_200
+_MAX_CONTEXT_CHARS = 10_000
 
 _SYSTEM_PROMPT = """\
 You are a senior market research analyst.  Your task is to produce a
@@ -142,8 +143,8 @@ def _build_context(records: list[dict[str, Any]]) -> str:
     """Format search results into a consolidated text context.
 
     Results are sorted by score (descending) so the most relevant
-    content appears first.  The combined text is truncated to
-    ``_MAX_CONTEXT_CHARS`` to stay within the model's context window.
+    content appears first.  The combined text is truncated to a small
+    fixed budget so the Groq request stays below the TPM limit.
     """
     sorted_records = sorted(
         records,
@@ -154,10 +155,12 @@ def _build_context(records: list[dict[str, Any]]) -> str:
     parts: list[str] = []
     total = 0
 
-    for i, rec in enumerate(sorted_records, start=1):
+    for i, rec in enumerate(sorted_records[:_MAX_SOURCES], start=1):
         title = (rec.get("title") or "Untitled").strip()
         url = (rec.get("url") or "").strip()
-        content = (rec.get("content") or "").strip()
+        content = " ".join((rec.get("content") or "").split())
+        if len(content) > _MAX_CHARS_PER_SOURCE:
+            content = content[:_MAX_CHARS_PER_SOURCE].rstrip() + " ..."
 
         block = (
             f"### Source {i}: {title}\n"
